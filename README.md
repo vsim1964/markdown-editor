@@ -1,2 +1,12 @@
-# markdown-editor
-Free desktop Markdown editor inspired by Typora
+# Markdown Editor
+Бесплатный локальный редактор Markdown для Windows. Версия 0.1.0 — прототип на Electron и TOAST UI Editor.
+
+Визуальное редактирование, исходный Markdown, открытие и сохранение файлов, оглавление, счётчик слов, светлая и тёмная темы, экспорт PDF. Сочетания Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S. При смене документа программа спрашивает о несохранённых изменениях.
+
+## Установка
+В Actions откройте успешную сборку Windows installer и скачайте архив Markdown-Editor-Windows. Распакуйте и запустите EXE. Установщик не подписан цифровой подписью.
+
+## Разработка
+Node.js 22: npm install, npm run build, npm start. Для установщика: npm run dist.
+
+Первая версия требует проверки на Windows. Автосохранение, дерево файлов, формулы и расширенный экспорт пока не реализованы.

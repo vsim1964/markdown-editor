@@ -1,0 +1,2 @@
+const {contextBridge,ipcRenderer}=require('electron');
+contextBridge.exposeInMainWorld('desktop',{open:()=>ipcRenderer.invoke('open'),newFile:()=>ipcRenderer.invoke('new'),save:(content,as)=>ipcRenderer.invoke('save',content,as),dirty:v=>ipcRenderer.send('dirty',v),pdf:()=>ipcRenderer.invoke('export-pdf'),onClose:fn=>ipcRenderer.on('request-close',()=>fn()),close:()=>ipcRenderer.send('close-approved')});

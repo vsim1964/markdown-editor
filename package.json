@@ -1,0 +1,38 @@
+{
+  "name": "markdown-editor",
+  "version": "0.1.0",
+  "description": "Local visual Markdown editor",
+  "author": "Markdown Editor contributors",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "build": "vite build",
+    "dist": "npm run build && electron-builder --win nsis --x64 --publish never"
+  },
+  "dependencies": {
+    "@toast-ui/editor": "3.2.2"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0",
+    "vite": "^6.0.0"
+  },
+  "build": {
+    "directories": {"output":"release"},
+    "appId": "org.markdowneditor.desktop",
+    "productName": "Markdown Editor",
+    "files": [
+      "dist/**/*",
+      "main.cjs",
+      "preload.cjs",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
