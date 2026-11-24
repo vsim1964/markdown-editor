@@ -15,3 +15,13 @@ ipcMain.on('dirty',(_,v)=>{dirty=!!v;title();});
 ipcMain.on('close-approved',()=>{closing=true;win.close();});
 ipcMain.handle('export-pdf',async()=>{const r=await dialog.showSaveDialog(win,{defaultPath:'Документ.pdf',filters:[{name:'PDF',extensions:['pdf']}]});if(r.canceled)return false;await fs.writeFile(r.filePath,await win.webContents.printToPDF({printBackground:true,pageSize:'A4'}));return true;});
 app.whenReady().then(()=>{Menu.setApplicationMenu(null);create();});app.on('window-all-closed',()=>app.quit());
+ipcMain.handle('local-image',async(_,src)=>{
+  if(!current||typeof src!=='string'||src.length>4096)return null;
+  try {
+    const p=src.startsWith('file:')?require('node:url').fileURLToPath(src):path.resolve(path.dirname(current),decodeURIComponent(src));
+    const types={'.png':'png','.jpg':'jpeg','.jpeg':'jpeg','.gif':'gif','.webp':'webp','.bmp':'bmp','.avif':'avif'};
+    const type=types[path.extname(p).toLowerCase()];if(!type)return null;
+    const stat=await fs.stat(p);if(!stat.isFile()||stat.size>30*1024*1024)return null;
+    return 'data:image/'+type+';base64,'+(await fs.readFile(p)).toString('base64');
+  } catch{return null;}
+});
