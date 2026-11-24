@@ -1,9 +1,18 @@
 const {app,BrowserWindow,ipcMain,dialog,Menu}=require('electron');
 const fs=require('node:fs/promises'), path=require('node:path');
 let win, current=null, dirty=false, closing=false;
-function create(){win=new BrowserWindow({icon:path.join(__dirname,'build','icon.png'),width:1200,height:850,minWidth:760,minHeight:480,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+const fsSync=require('node:fs');
+const zoomSteps=[60,70,80,90,100,110,125,150,175,200];
+let zoom=100;
+function zoomFile(){return path.join(app.getPath('userData'),'zoom.json');}
+function restoreZoom(){try{const v=JSON.parse(fsSync.readFileSync(zoomFile(),'utf8'));if(zoomSteps.includes(v))zoom=v;}catch{}}
+function changeZoom(action){const i=zoomSteps.indexOf(zoom);zoom=action==='reset'?100:zoomSteps[Math.max(0,Math.min(zoomSteps.length-1,i+(action==='in'?1:-1)))];win.webContents.setZoomFactor(zoom/100);try{fsSync.writeFileSync(zoomFile(),JSON.stringify(zoom));}catch{}win.webContents.send('zoom-changed',zoom);return zoom;}
+ipcMain.handle('zoom-get',()=>zoom);
+ipcMain.handle('zoom-change',(_,action)=>{if(['in','out','reset'].includes(action))return changeZoom(action);return zoom;});
+function create(){restoreZoom();win=new BrowserWindow({icon:path.join(__dirname,'build','icon.png'),width:1200,height:850,minWidth:760,minHeight:480,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
 win.webContents.on('will-navigate',e=>e.preventDefault());
+win.webContents.on('did-finish-load',()=>{win.webContents.setZoomFactor(zoom/100);win.webContents.send('zoom-changed',zoom);});
 win.loadFile(path.join(__dirname,'dist','index.html'));
 win.on('close',e=>{if(dirty&&!closing){e.preventDefault();win.webContents.send('request-close');}});
 }

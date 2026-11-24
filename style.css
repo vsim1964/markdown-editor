@@ -2,3 +2,5 @@
 .toastui-editor-contents img{max-width:100%;height:auto}
 .token.comment,.token.prolog{color:#768390}.token.keyword,.token.tag,.token.selector{color:#a626a4}.token.string,.token.attr-value{color:#22863a}.token.number,.token.boolean,.token.constant{color:#986801}.token.function,.token.class-name{color:#005cc5}.token.operator,.token.punctuation{color:#59636f}.token.property,.token.attr-name{color:#b35414}
 .dark .token.keyword,.dark .token.tag{color:#d2a8ff}.dark .token.string,.dark .token.attr-value{color:#a5d6a7}.dark .token.number,.dark .token.boolean{color:#ffcb6b}.dark .token.function,.dark .token.class-name{color:#82aaff}.dark .token.operator,.dark .token.punctuation{color:#adb9c8}
+
+header{flex-wrap:wrap}#zoom-controls{display:flex;align-items:center;gap:3px;margin-left:8px;flex-shrink:0}#zoom-controls button{padding:2px 8px;min-width:28px}#zoom-reset{min-width:55px!important}footer{flex-wrap:wrap}@media print{#zoom-controls{display:none!important}}

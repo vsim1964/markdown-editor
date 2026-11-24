@@ -1,6 +1,6 @@
 {
   "name": "markdown-editor",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Local visual Markdown editor",
   "author": "Markdown Editor contributors",
   "main": "main.cjs",
