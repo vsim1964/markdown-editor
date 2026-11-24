@@ -1,0 +1,1 @@
+window.addEventListener('error',e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка запуска: '+(e.message||'не удалось загрузить модуль');});window.addEventListener('unhandledrejection',e=>{const s=document.getElementById('status');if(s)s.textContent='Ошибка: '+String(e.reason);});

@@ -1,7 +1,7 @@
 const {app,BrowserWindow,ipcMain,dialog,Menu}=require('electron');
 const fs=require('node:fs/promises'), path=require('node:path');
 let win, current=null, dirty=false, closing=false;
-function create(){win=new BrowserWindow({width:1200,height:850,minWidth:760,minHeight:480,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+function create(){win=new BrowserWindow({icon:path.join(__dirname,'build','icon.png'),width:1200,height:850,minWidth:760,minHeight:480,webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
 win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
 win.webContents.on('will-navigate',e=>e.preventDefault());
 win.loadFile(path.join(__dirname,'dist','index.html'));

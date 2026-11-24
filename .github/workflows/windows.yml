@@ -14,6 +14,8 @@ jobs:
         with:
           node-version: '22'
       - run: npm install
+      - run: npm install --no-save sharp
+      - run: node -e "require('sharp')('build/icon.svg').png().toFile('build/icon.png')"
       - run: npm run dist
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
