@@ -3,7 +3,11 @@ const fs=require('node:fs/promises'), path=require('node:path');
 let win, current=null, dirty=false, closing=false;
 const {randomUUID}=require('node:crypto');
 const {pathToFileURL}=require('node:url');
-const pending=new Map();
+let pending=new Map();
+const documents=new Map();
+let activeId=null;
+function activate(id){const d=documents.get(id);if(!d)throw new Error('Документ закрыт');activeId=id;current=d.path;pending=d.pending;title();}
+function makeDoc(p=null){const id=randomUUID();documents.set(id,{path:p,pending:new Map()});return id;}
 const imageTypes={'.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.gif':'image/gif','.webp':'image/webp','.bmp':'image/bmp','.avif':'image/avif'};
 const mimeExt=Object.fromEntries(Object.entries(imageTypes).map(([ext,mime])=>[mime,ext]));
 mimeExt['image/jpeg']='.jpg';
@@ -16,7 +20,7 @@ function stageImage(mime,bytes,name='photo'){
   pending.set(rel,{mime,bytes});
   return rel;
 }
-ipcMain.handle('stage-image',(_,mime,bytes,name)=>stageImage(mime,Buffer.from(bytes),name));
+ipcMain.handle('stage-image',(_,id,mime,bytes,name)=>{if(id!==activeId)throw new Error('Документ изменился');return stageImage(mime,Buffer.from(bytes),name);});
 function imageResponse(bytes,mime){return new Response(bytes,{headers:{'Content-Type':mime,'Cache-Control':'no-store'}});}
 async function serve(req){
   try{
@@ -86,9 +90,11 @@ win.loadURL('mdeditor://editor/index.html');
 win.on('close',e=>{if(dirty&&!closing){e.preventDefault();win.webContents.send('request-close');}});
 }
 function title(){win.setTitle((dirty?'* ':'')+(current?path.basename(current):'Без названия')+' — Markdown Editor');}
-ipcMain.handle('open',async()=>{const r=await dialog.showOpenDialog(win,{properties:['openFile'],filters:[{name:'Markdown',extensions:['md','markdown','txt']}]});if(r.canceled)return null;const p=r.filePaths[0],content=await fs.readFile(p,'utf8');pending.clear();current=p;dirty=false;title();return {name:path.basename(p),content};});
-ipcMain.handle('new',()=>{pending.clear();current=null;dirty=false;title();});
-ipcMain.handle('save',async(_,content,as)=>{let p=current;if(!p||as){const r=await dialog.showSaveDialog(win,{defaultPath:p||'Документ.md',filters:[{name:'Markdown',extensions:['md']}]});if(r.canceled)return null;p=r.filePath;}content=await writeImages(content,p);await fs.writeFile(p,content,'utf8');current=p;pending.clear();dirty=false;title();return {name:path.basename(p),content};});
+ipcMain.handle('open',async()=>{const r=await dialog.showOpenDialog(win,{properties:['openFile'],filters:[{name:'Markdown',extensions:['md','markdown','txt']}]});if(r.canceled)return null;const p=r.filePaths[0],content=await fs.readFile(p,'utf8');const existing=[...documents].find(([,d])=>d.path&&path.resolve(d.path).toLowerCase()===path.resolve(p).toLowerCase());if(existing)return {id:existing[0],existing:true};const id=makeDoc(p);return {id,name:path.basename(p),content};});
+ipcMain.handle('new',()=>({id:makeDoc()}));
+ipcMain.handle('activate',(_,id)=>{activate(id);return true;});
+ipcMain.handle('drop',(_,id)=>{documents.delete(id);if(activeId===id){activeId=null;current=null;pending=new Map();}});
+ipcMain.handle('save',async(_,id,content,as)=>{if(id!==activeId)throw new Error('Документ изменился');let p=current;if(!p||as){const r=await dialog.showSaveDialog(win,{defaultPath:p||'Документ.md',filters:[{name:'Markdown',extensions:['md']}]});if(r.canceled)return null;p=r.filePath;}if([...documents].some(([key,d])=>key!==id&&d.path&&path.resolve(d.path).toLowerCase()===path.resolve(p).toLowerCase()))throw new Error('Этот файл уже открыт в другой вкладке');content=await writeImages(content,p);await fs.writeFile(p,content,'utf8');current=p;documents.get(id).path=p;pending.clear();title();return {name:path.basename(p),content};});
 ipcMain.on('dirty',(_,v)=>{dirty=!!v;title();});
 ipcMain.on('close-approved',()=>{closing=true;win.close();});
 ipcMain.handle('export-pdf',async()=>{const r=await dialog.showSaveDialog(win,{defaultPath:'Документ.pdf',filters:[{name:'PDF',extensions:['pdf']}]});if(r.canceled)return false;await fs.writeFile(r.filePath,await win.webContents.printToPDF({printBackground:true,pageSize:'A4'}));return true;});
